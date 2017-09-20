@@ -7,13 +7,24 @@ import cv
 
 import svr
 
+import cv2
+
+import libvision
+
+import getopt, sys
+
+
 svr.connect()
 
 open_streams = {} # Map stream names to stream objects
 last_sources_update = 0  # Last time that the open_streams was updated
 SOURCES_UPDATE_FREQUENCY = 5  # How many times per second to update sources
 
+
 if __name__ == "__main__":
+
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    out = cv2.VideoWriter('output.xvid',fourcc, 20.0, (640,480))
 
     while True:
 
@@ -60,3 +71,17 @@ if __name__ == "__main__":
         key = cv.WaitKey(10)
         if key == ord('q'):
             break
+        # Save video to file
+        for stream_name, stream in open_streams.items():
+            frame = None
+            try:
+                frame = stream.get_frame()
+            except svr.OrphanStreamExeption:
+                # Closed Stream
+                del open_streams[stream_name]
+                cv.DestroyWindow(stream_name)
+                print "Stream Closed:", stream_name
+
+            if frame:
+                raw_frame = libvision.cv_to_cv2(frame)
+                out.write(raw_frame)
