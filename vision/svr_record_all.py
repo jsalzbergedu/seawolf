@@ -78,6 +78,7 @@ if __name__ == "__main__":
         if key == ord('q'):
             break
         # Save video to file
+        i = 0
         for stream_name, stream in open_streams.items():
             frame = None
             try:
@@ -89,5 +90,9 @@ if __name__ == "__main__":
                 print "Stream Closed:", stream_name
 
             if frame:
-                raw_frame = libvision.cv_to_cv2(frame)
-                out.write(raw_frame)
+                if out.isOpened():
+                    raw_frame = libvision.cv_to_cv2(frame)
+                    out.write(raw_frame)
+                else:
+                    cv2.imwrite("image{}.jpeg".format(), raw_frame)
+            i += 1
