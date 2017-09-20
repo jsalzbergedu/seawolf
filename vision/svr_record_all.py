@@ -29,7 +29,7 @@ def getfilename():
         assert False, "No filename passed to program"
 
 if __name__ == "__main__":
-    fourcc = cv2.cv.CV_FOURCC(*'MJPG')
+    fourcc = cv2.cv.CV_FOURCC(*'XVID')
     out = cv2.VideoWriter(getfilename(), fourcc, 20.0, (640,480))
 
     while True:
