@@ -11,8 +11,6 @@ import cv2
 
 import libvision
 
-import getopt, sys
-
 
 svr.connect()
 
@@ -23,7 +21,7 @@ SOURCES_UPDATE_FREQUENCY = 5  # How many times per second to update sources
 
 if __name__ == "__main__":
 
-    fourcc = cv2.cv.CV_FOURCC(*'XVID')
+    fourcc = cv2.cv.CV_FOURCC(*'IYUV')
     out = cv2.VideoWriter('output.xvid',fourcc, 20.0, (640,480))
 
     while True:

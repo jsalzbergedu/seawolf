@@ -1,39 +1,36 @@
+'''Show all SVR streams, and show any new streams that appear.'''
 
 from __future__ import division
-from sys import argv
 from time import time
-import os.path
+
 import cv
-# import cv2
+
 import svr
+
+import cv2
+
+import libvision
+
+import argparse
+
 svr.connect()
 
 open_streams = {} # Map stream names to stream objects
-stream_directories = {}  # Map stream names to recording directories
-stream_framecounts = {}  # Map stream names to number of frames recorded
-SOURCES_UPDATE_FREQUENCY = 5  # How many times per second to update sources
 last_sources_update = 0  # Last time that the open_streams was updated
+SOURCES_UPDATE_FREQUENCY = 5  # How many times per second to update sources
 
-def get_next_dir(base_dir, prefix=""):
-    '''Find the next directory base_dir+prefix+i that isn't taken.'''
-    i=0
-    while True:
-        candidate = os.path.join(base_dir, prefix+str(i))
-        if not os.path.exists(candidate):
-            break
-        i += 1
-    os.mkdir(candidate)
-    return candidate
+def getfilename():
+    parser = argparse.ArgumentParser('Record video streams. May be used in conjunciton with watch all.')
+    parser.add_argument('filename', help='File that the stream gets recorded to.')
+    args = parser.parse_args()
+    if args.filename is not None:
+        return args.filename + '.avi'
+    else:
+        assert False, "No filename passed to program"
 
 if __name__ == "__main__":
-
-    base_dir = argv[1]
-    if not os.path.exists(base_dir):
-        os.mkdir(base_dir)
-    capture_dir = get_next_dir(base_dir)
-
-    # fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    fourcc = cv2.cv.CV_FOURCC(*'MJPG')
+    out = cv2.VideoWriter(getfilename(), fourcc, 20.0, (640,480))
 
     while True:
 
@@ -49,40 +46,48 @@ if __name__ == "__main__":
                 if stream_name not in open_streams:
                     try:
 
-                        # New stream
+                        # New Stream
                         open_streams[stream_name] = svr.Stream(stream_name)
                         open_streams[stream_name].unpause()
-                        stream_directories[stream_name] = get_next_dir(capture_dir, stream_name)
-                        stream_framecounts[stream_name] = 0
+                        cv.NamedWindow(stream_name)
                         print "Stream Opened:", stream_name
-
                     except svr.StreamException:
 
                         # Closed Stream
                         if stream_name in open_streams:
                             del open_streams[stream_name]
-                            del stream_directories[stream_name]
-                            del stream_framecounts[stream_name]
                             print "Stream Closed:", stream_name
 
-        # Record streams
+        # Show streams
         for stream_name, stream in open_streams.items():  # Cannot be iter because
                                                         # dict is mutated in loop
             frame = None
             try:
-                frame = stream.get_frame(False)
+                frame = stream.get_frame()
             except svr.OrphanStreamException:
 
                 # Closed Stream
                 del open_streams[stream_name]
-                del stream_directories[stream_name]
-                del stream_framecounts[stream_name]
+                cv.DestroyWindow(stream_name)
                 print "Stream Closed:", stream_name
 
             if frame:
-                filename = os.path.join(
-                    stream_directories[stream_name],
-                    "%i.jpg" % stream_framecounts[stream_name]
-                )
-                cv.SaveImage(filename, frame)
-                stream_framecounts[stream_name] += 1
+                cv.ShowImage(stream_name, frame)
+
+        key = cv.WaitKey(10)
+        if key == ord('q'):
+            break
+        # Save video to file
+        for stream_name, stream in open_streams.items():
+            frame = None
+            try:
+                frame = stream.get_frame()
+            except svr.OrphanStreamExeption:
+                # Closed Stream
+                del open_streams[stream_name]
+                cv.DestroyWindow(stream_name)
+                print "Stream Closed:", stream_name
+
+            if frame:
+                raw_frame = libvision.cv_to_cv2(frame)
+                out.write(raw_frame)
