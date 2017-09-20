@@ -94,5 +94,5 @@ if __name__ == "__main__":
                     raw_frame = libvision.cv_to_cv2(frame)
                     out.write(raw_frame)
                 else:
-                    cv2.imwrite("image{}.jpeg".format(), raw_frame)
+                    cv2.imwrite("image{}.jpeg".format(i), raw_frame)
             i += 1
