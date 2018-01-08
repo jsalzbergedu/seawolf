@@ -29,6 +29,7 @@ packages/swpackages/
 *.jpeg
 *.jpg
 
-## cook variables ##
+## cook files ##
 packages/.cookvars
+packages/.log
 
